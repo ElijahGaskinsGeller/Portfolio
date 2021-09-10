@@ -6,8 +6,8 @@ $(document).ready(function () {
         let BackgroundImage = $(Target).css("background-image");
 
         let PopupImage = $(".popup-image");
-        // PopupImage.css("background-image", BackgroundImage);
         let ImageSource = BackgroundImage.replace('url("', '').replace('")', '');
+
         PopupImage.attr("src", ImageSource);
 
         $(".image-popup-container").addClass("show");
@@ -17,6 +17,13 @@ $(document).ready(function () {
 
 
     $('.image-popup-bg').on('click', function (EventObject) {
+        console.log("here");
+        $(".image-popup-container").removeClass("show");
+    });
+
+
+    $('.popup-exit').on('click', function (EventObject) {
+        console.log("here");
         $(".image-popup-container").removeClass("show");
     });
 
