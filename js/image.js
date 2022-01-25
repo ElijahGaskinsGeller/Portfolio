@@ -12,19 +12,35 @@ $(document).ready(function () {
 
         $(".image-popup-container").addClass("show");
 
-        console.log($(Target).css("background-image"));
+        function getMeta(url) {
+            let img = new Image();
+            img.onload = function() {
+                if(this.width >= this.height){
+                    $(".image-popup-container img").addClass("image-popup-wide");
+                }else{
+                    $(".image-popup-container img").addClass("image-popup-tall");
+                }
+            };
+            img.src = url;
+        }
+        getMeta(ImageSource);
+
+        // console.log("here");
+        // console.log($(Target).css("background-image"));
     });
 
 
     $('.image-popup-bg').on('click', function (EventObject) {
-        console.log("here");
         $(".image-popup-container").removeClass("show");
+        $(".image-popup-container img").removeClass("image-popup-wide");
+        $(".image-popup-container img").removeClass("image-popup-tall");
     });
 
 
     $('.popup-exit').on('click', function (EventObject) {
-        console.log("here");
         $(".image-popup-container").removeClass("show");
+        $(".image-popup-container img").removeClass("image-popup-wide");
+        $(".image-popup-container img").removeClass("image-popup-tall");
     });
 
 });

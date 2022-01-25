@@ -83,6 +83,28 @@
     font-weight: bolder;
   }
 
+  .image-popup-wide {
+    height: 100%;
+    width: auto;
+
+    @media screen and (max-width: 1000px) {
+      height: auto;
+      width: 100%;
+    }
+
+  }
+
+  .image-popup-tall {
+    height: auto;
+    width: 100%;
+
+    @media screen and (max-width: 1000px) {
+      height: 100%;
+      width: auto;
+    }
+
+  }
+
   img {
     left: 0;
     right: 0;
@@ -93,8 +115,8 @@
     position: absolute;
     transition: all .05s;
 
-    height: 100%;
-    width: auto;
+    //height: 100%;
+    //width: auto;
 
     margin: auto;
   }
