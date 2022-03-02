@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Elijah | Tech | Tree</title>
+    <script src="../js/core-functionality.js"></script>
+    <style>
+
+        .back-container {
+            position: fixed;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .back-container .back-link {
+            position: -webkit-sticky; /* for Safari */
+            position: sticky;
+            top: 50px;
+            align-self: flex-start; /* <-- this is the fix */
+        }
+
+        .back-container .back-link a {
+            position: absolute;
+            right: 50px;
+            color: black;
+            opacity: .5;
+            font-size: 2.441rem;
+            transition: all .5s ease;
+        }
+
+        .back-container .back-link a :hover{
+             opacity: 1;
+         }
+    </style>
+</head>
+
+<body style="margin: 0; padding: 0; height: 500vh;">
+
+<div class="back-container">
+    <h2 class="back-link"><a href="/Tech.html">⇦ Back</a></h2>
+</div>
+<canvas id="c" width="1920px" height="1080px" style="position: fixed; width: 100%; height: 100%;"></canvas>
+
+<script type="x-shader/x-vertex" id="vertexshader">
+
+			attribute float size;
+			attribute float opacity;
+
+			out float vOpacity;
+
+
+			void main() {
+
+                vOpacity = opacity;
+
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+
+				gl_PointSize = size * ( 300.0 / -mvPosition.z );
+
+				gl_Position = projectionMatrix * mvPosition;
+
+			}
+
+
+
+
+
+
+
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentshader">
+
+			uniform sampler2D pointTexture;
+
+			in float vOpacity;
+
+			void main() {
+
+				gl_FragColor = vec4( 1.0, 1.0, 1.0 , vOpacity );
+
+				gl_FragColor = gl_FragColor * texture2D( pointTexture, gl_PointCoord );
+
+			}
+
+
+
+
+
+
+
+</script>
+
+<script type="module">
+
+    import * as THREE from "../js/threejs/three.module.js"
+
+    import {FBXLoader} from "../js/threejs/jsm/loaders/FBXLoader.js";
+    import {EffectComposer} from "../js/threejs/jsm/postprocessing/EffectComposer.js";
+    import {ClearPass} from "../js/threejs/jsm/postprocessing/ClearPass.js";
+    import {ClearMaskPass, MaskPass} from "../js/threejs/jsm/postprocessing/MaskPass.js";
+    import {RenderPass} from "../js/threejs/jsm/postprocessing/RenderPass.js";
+    import {ShaderPass} from "../js/threejs/jsm/postprocessing/ShaderPass.js";
+    import {CopyShader} from "../js/threejs/jsm/shaders/CopyShader.js";
+
+    let canvas = document.getElementById("c");
+
+    let canvasWidth = canvas.clientWidth;
+    let canvasHeight = canvas.clientHeight;
+    let canvasAspect = canvasWidth / canvasHeight;
+
+    let renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
+    // renderer.setClearColor(new THREE.Color(1, .5, 1));
+    renderer.setClearColor(new THREE.Color(0x807e7e));
+
+    let renderTarget = new THREE.WebGLRenderTarget(canvasWidth, canvasHeight,
+        {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            format: THREE.RGBFormat,
+            stencilBuffer: true
+        });
+
+    let composer = new EffectComposer(renderer, renderTarget);
+
+    let cameraScrollStart = 1.25 * (canvasWidth / canvasHeight) * (3786 / 1980) / 2;
+    let cameraScrollEnd = -1.25 * (canvasWidth / canvasHeight) * (3786 / 1980) / 2;
+    let camera = new THREE.OrthographicCamera(-1, 1, 1, -1, .0, 1000);
+    camera.aspect = canvasWidth / canvasHeight;
+    camera.position.z = 100;
+
+    camera.position.y = cameraScrollStart;
+
+    let scene = new THREE.Scene();
+    let maskScene = new THREE.Scene();
+    let underScene = new THREE.Scene();
+
+    let clearPass = new ClearPass();
+    let clearMaskPass = new ClearMaskPass();
+
+    let scenePass = new RenderPass(scene, camera);
+    let maskPass = new MaskPass(maskScene, camera);
+
+    let underPass = new RenderPass(underScene, camera);
+    underPass.clear = false;
+
+    let maskSceneTest = new RenderPass(maskScene, camera);
+    let outputPass = new ShaderPass(CopyShader);
+
+    composer = new EffectComposer(renderer, renderTarget);
+    composer.addPass(clearPass);
+    composer.addPass(scenePass);
+    composer.addPass(maskPass);
+    composer.addPass(underPass);
+    composer.addPass(clearMaskPass);
+    composer.addPass(outputPass);
+
+
+    let textureLoader = new THREE.TextureLoader();
+    let loader = new FBXLoader();
+
+    console.log(canvasWidth);
+    let panelScalar = (canvasWidth > 1000)? .004 : .007;
+    let panelScaleX = panelScalar;
+    let panelScaleY = panelScalar * (canvasWidth / canvasHeight);
+
+    function RandomRange(min, max){
+        return Math.random() * (max - min) + min;
+    }
+
+    function MakePanel(border, content, box = null) {
+        return {border: border, content: content, box: box};
+    }
+
+    function CreateSprite(source, width, height) {
+
+        let map = new THREE.TextureLoader().load(source);
+        map.anisotropy = 0;
+        map.magFilter = THREE.NearestFilter;
+        map.minFilter = THREE.NearestFilter;
+
+        let spriteMaterial = new THREE.SpriteMaterial({map: map});
+
+        let sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(width, height, 1);
+
+        return sprite;
+    }
+
+    function GenerateParticlePosition(){
+        //TODO: pass in aspect
+        let x = RandomRange(-.25,.25) * canvasAspect;
+        let y = RandomRange(-.35,.35) * canvasAspect;
+
+        return {x: x, y: y};
+    }
+
+
+    //TODO: base the width and height off of the size of the panel
+    let maskPanelScalar = (canvasWidth > 1000)? 1.05: 1.85;
+    let maskPanelWidth = maskPanelScalar;
+    let maskPanelHeight = maskPanelScalar * (canvasWidth / canvasHeight) * (3786 / 1980);
+
+    let grass0 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_grass_0.png", maskPanelWidth, maskPanelHeight);
+    grass0.position.z = 0;
+    underScene.add(grass0);
+    let tree1 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_tree_1.png", maskPanelWidth, maskPanelHeight);
+    tree1.position.z = -1;
+    underScene.add(tree1);
+    let grass2 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_grass_2.png", maskPanelWidth, maskPanelHeight);
+    grass2.position.z = -2;
+    underScene.add(grass2);
+    let excavator3 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_excavator_3.png", maskPanelWidth, maskPanelHeight);
+    excavator3.position.z = -3;
+    underScene.add(excavator3);
+    let fence4 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_fence_4.png", maskPanelWidth, maskPanelHeight);
+    fence4.position.z = -4;
+    underScene.add(fence4);
+
+    let car = CreateSprite("../imgs/panel_test/cars/car_black.png", maskPanelWidth, maskPanelHeight);
+    car.position.z = -4.5;
+    car.position.x = -1;
+    underScene.add(car);
+    car.material.map.center.set(.5, .5);
+    car.material.map.repeat.set((Math.random() > .5) ? -1 : 1, 1);
+
+    let car1 = CreateSprite("../imgs/panel_test/cars/car_red.png", maskPanelWidth, maskPanelHeight);
+    car1.position.z = -4.5;
+    car1.position.x = -1;
+    underScene.add(car1);
+    car1.material.map.center.set(.5, .5);
+    car1.material.map.repeat.set((Math.random() > .5) ? -1 : 1, 1);
+
+    let car2 = CreateSprite("../imgs/panel_test/cars/car_green.png", maskPanelWidth, maskPanelHeight);
+    car2.position.z = -4.5;
+    car2.position.x = -1;
+    underScene.add(car2);
+    car2.material.map.center.set(.5, .5);
+    car2.material.map.repeat.set((Math.random() > .5) ? -1 : 1, 1);
+
+    let cars = [car, car1, car2];
+
+    let buildings5 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_buildings_5.png", maskPanelWidth, maskPanelHeight);
+    buildings5.position.z = -5;
+    underScene.add(buildings5);
+    let buildings6 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_buildings_6.png", maskPanelWidth, maskPanelHeight);
+    buildings6.position.z = -6;
+    underScene.add(buildings6);
+    let buildings7 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_buildings_7.png", maskPanelWidth, maskPanelHeight);
+    buildings7.position.z = -7;
+    underScene.add(buildings7);
+    let sky8 = CreateSprite("../imgs/panel_test/three_panel_mask/three_panel_mask_sky_8.png", maskPanelWidth, maskPanelHeight);
+    sky8.position.z = -8;
+    underScene.add(sky8);
+
+
+    let glowParticleTexture = textureLoader.load("../imgs/panel_test/particles/glow_particle.png");
+    let particleGeometry = new THREE.BufferGeometry();
+    // let particleMaterial = new THREE.PointsMaterial({
+    //     size: 75,
+    //     map: glowParticleTexture,
+    //     blending: THREE.AdditiveBlending,
+    //     depthTest: false,
+    //     transparent: true
+    // });
+
+    let particleMaterial = new THREE.ShaderMaterial({
+        uniforms: {pointTexture: {value: glowParticleTexture}},
+        vertexShader: document.getElementById("vertexshader").textContent,
+        fragmentShader: document.getElementById("fragmentshader").textContent,
+        // blending: THREE.AdditiveBlending,
+        depthTest: false,
+        transparent: true,
+        vertexColors: false
+
+    });
+
+    let particleVertices = [];
+    let particleOpacities = [];
+    let particleSizes = [];
+
+    let particleCount = 10;
+    for (let i = 0; i < particleCount; i++) {
+        let randomPos = GenerateParticlePosition();
+        let z = -1;
+
+        let opacity = Math.random();
+        let size = 45;
+
+        particleVertices.push(randomPos.x, randomPos.y, z);
+        particleOpacities.push(opacity);
+        particleSizes.push(size);
+    }
+
+    particleGeometry.setAttribute("position", new THREE.Float32BufferAttribute(particleVertices, 3).setUsage(THREE.DynamicDrawUsage));
+    particleGeometry.setAttribute("opacity", new THREE.Float32BufferAttribute(particleOpacities, 1).setUsage(THREE.DynamicDrawUsage));
+    particleGeometry.setAttribute("size", new THREE.Float32BufferAttribute(particleSizes, 1).setUsage(THREE.DynamicDrawUsage));
+
+    let particles = new THREE.Points(particleGeometry, particleMaterial);
+    particles.frustumCulled = false;
+
+    console.log(particleGeometry);
+
+    underScene.add(particles);
+
+    let top_m_tri;
+    loader.load("../models/panel_test/top_m_tri.fbx",
+        function (object) {
+
+            object.children[0].rotation.x = 0;
+            object.scale.x = panelScaleX
+            object.scale.y = panelScaleY;
+
+
+            let border = object.clone();
+            border.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: .5,
+                map: textureLoader.load("../imgs/panel_test/top_m_tri/top_m_tri_border.png")
+            });
+
+            let grid = object.clone();
+            grid.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: .5,
+                map: textureLoader.load("../imgs/uv_test_grid.png")
+            });
+            grid.position.z = -1;
+
+            let box = new THREE.BoxHelper(border, 0xff0000);
+            box.geometry.computeBoundingBox();
+            cameraScrollStart = box.geometry.boundingBox.max.y - 1 + .1;
+            OnScroll();
+
+            top_m_tri = MakePanel(border, {grid: grid}, box);
+
+            // scene.add(border);
+            // scene.add(grid);
+        }
+    );
+
+    let top_l_tri;
+    loader.load("../models/panel_test/top_l_tri.fbx",
+        function (object) {
+
+            object.children[0].rotation.x = 0;
+            object.scale.x = panelScaleX
+            object.scale.y = panelScaleY;
+
+            let border = object.clone();
+            border.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: .5,
+                map: textureLoader.load("../imgs/panel_test/top_l_tri/top_l_tri_border.png")
+            });
+
+            let grid = object.clone();
+            grid.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: .5,
+                map: textureLoader.load("../imgs/uv_test_grid.png")
+            });
+            grid.position.z = -1;
+
+            let box = new THREE.BoxHelper(border, 0xff0000);
+            top_l_tri = MakePanel(border, {grid: grid}, box);
+
+            // scene.add(border);
+            // scene.add(grid);
+        }
+    );
+
+    let top_r_tri;
+    loader.load("../models/panel_test/top_r_tri.fbx",
+        function (object) {
+
+            object.children[0].rotation.x = 0;
+            object.scale.x = panelScaleX;
+            object.scale.y = panelScaleY;
+
+            let border = object.clone();
+            border.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: .5,
+                map: textureLoader.load("../imgs/panel_test/top_r_tri/top_r_tri_border.png")
+            });
+
+            let grid = object.clone();
+            grid.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: .5,
+                map: textureLoader.load("../imgs/uv_test_grid.png")
+            });
+            grid.position.z = -1;
+
+            let box = new THREE.BoxHelper(border, 0xff0000);
+            top_r_tri = MakePanel(border, {grid: grid}, box);
+
+            // scene.add(border);
+            // scene.add(grid);
+        }
+    );
+
+    let bot_m_tri;
+    loader.load("../models/panel_test/bot_m_tri.fbx",
+        function (object) {
+
+            object.children[0].rotation.x = 0;
+            object.scale.x = panelScaleX;
+            object.scale.y = panelScaleY;
+
+            let border = object.clone();
+            border.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: 0.5,
+                map: textureLoader.load("../imgs/panel_test/bot_m_tri/bot_m_tri_border.png")
+            });
+
+            let grid = object.clone();
+            grid.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: .5,
+                map: textureLoader.load("../imgs/uv_test_grid.png")
+            });
+            grid.position.z = -1;
+
+            let box = new THREE.BoxHelper(border, 0xff0000);
+            bot_m_tri = MakePanel(border, {grid: grid}, box);
+
+            // scene.add(border);
+            // scene.add(grid);
+        }
+    );
+
+    let bot_l_tri;
+    loader.load("../models/panel_test/bot_l_tri.fbx",
+        function (object) {
+
+            object.children[0].rotation.x = 0;
+            object.scale.x = panelScaleX;
+            object.scale.y = panelScaleY;
+
+            let border = object.clone();
+            border.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: 0.5,
+                map: textureLoader.load("../imgs/panel_test/bot_l_tri/bot_l_tri_border.png")
+            });
+
+            let grid = object.clone();
+            grid.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: .5,
+                map: textureLoader.load("../imgs/uv_test_grid.png")
+            });
+            grid.position.z = -1;
+
+            let box = new THREE.BoxHelper(border, 0xff0000);
+            bot_l_tri = MakePanel(border, {grid: grid}, box);
+
+            // scene.add(border);
+            // scene.add(grid);
+        }
+    );
+
+    let bot_r_tri;
+    loader.load("../models/panel_test/bot_r_tri.fbx",
+        function (object) {
+
+            object.children[0].rotation.x = 0;
+            object.scale.x = panelScaleX;
+            object.scale.y = panelScaleY;
+
+            let border = object.clone();
+            border.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: 0.5,
+                map: textureLoader.load("../imgs/panel_test/bot_r_tri/bot_r_tri_border.png")
+            });
+
+            let grid = object.clone();
+            grid.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: .5,
+                map: textureLoader.load("../imgs/uv_test_grid.png")
+            });
+            grid.position.z = -1;
+
+            let box = new THREE.BoxHelper(border, 0xff0000);
+            bot_r_tri = MakePanel(border, {grid: grid}, box);
+
+            // scene.add(border);
+            // scene.add(grid);
+        }
+    );
+
+    let top_rec;
+    loader.load("../models/panel_test/top_rec.fbx",
+        function (object) {
+
+            object.children[0].rotation.x = 0;
+            object.scale.x = panelScaleX;
+            object.scale.y = panelScaleY;
+
+            let border = object.clone();
+            border.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: 0.5,
+                map: textureLoader.load("../imgs/panel_test/top_rec/top_rec_border.png")
+            });
+
+
+            let box = new THREE.BoxHelper(border, 0xff0000);
+            top_rec = MakePanel(border, {}, box);
+
+            scene.add(border);
+            border.position.z = 100;
+
+            maskScene.add(object);
+        }
+    );
+
+    let mid_rec;
+    loader.load("../models/panel_test/mid_rec.fbx",
+        function (object) {
+
+            object.children[0].rotation.x = 0;
+
+            object.scale.x = panelScaleX;
+            object.scale.y = panelScaleY;
+
+            let border = object.clone();
+            border.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: 0.5,
+                map: textureLoader.load("../imgs/panel_test/mid_rec/mid_rec_border.png")
+            });
+
+
+            let box = new THREE.BoxHelper(border, 0xff0000);
+            mid_rec = MakePanel(border, {}, box);
+
+
+            border.position.z = 100;
+            scene.add(border);
+
+            maskScene.add(object);
+        }
+    );
+
+    let bot_rec;
+    loader.load("../models/panel_test/bot_rec.fbx",
+        function (object) {
+
+            object.children[0].rotation.x = 0;
+            object.scale.x = panelScaleX;
+            object.scale.y = panelScaleY;
+
+            let border = object.clone();
+            border.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: 0.5,
+                map: textureLoader.load("../imgs/panel_test/bot_rec/bot_rec_border.png")
+            });
+
+            let grid = object.clone();
+            grid.children[0].material = new THREE.MeshBasicMaterial({
+                alphaTest: 0.5,
+                map: textureLoader.load("../imgs/uv_test_grid.png")
+            });
+            grid.position.z = -1;
+
+
+            let box = new THREE.BoxHelper(border, 0xff0000);
+            bot_rec = MakePanel(border, {}, box);
+
+            box.geometry.computeBoundingBox();
+            cameraScrollEnd = box.geometry.boundingBox.min.y + 1 - .1;
+            OnScroll();
+
+            border.position.z = 100;
+            scene.add(border);
+
+            maskScene.add(object);
+        }
+    );
+
+    let previousTime = 0;
+
+    function render(time) {
+        time *= .001;
+        let deltaTime = time - previousTime;
+        previousTime = time;
+
+        let sizes = particleGeometry.attributes.size.array;
+        let opacity = particleGeometry.attributes.opacity.array;
+        let position = particleGeometry.attributes.position.array;
+
+        for (let i = 0; i < particleCount; i++) {
+            let currentSin = Math.sin(.05 * (i + 1) * time);
+
+            sizes[i] = (2 + Math.sin(.05 * (i + 1) * time)) * 37 * ((particleCount - i) / particleCount) * ((canvasWidth * canvasHeight) / (16 * 512 * 512));
+            position[i*3+1] += i*.00001*canvasAspect;
+
+            let newOpacity = Math.sin(.05 * (i + 1) * time);
+
+            if (newOpacity <= 0 && opacity[i] > 0) {
+                let randomPos = GenerateParticlePosition();
+
+                position[i * 3] = randomPos.x;
+                position[i * 3 + 1] = randomPos.y;
+            }
+
+            opacity[i] = newOpacity;
+        }
+
+        particleGeometry.attributes.size.needsUpdate = true;
+        particleGeometry.attributes.opacity.needsUpdate = true;
+        particleGeometry.attributes.position.needsUpdate = true;
+
+        for (let i = 0; i < cars.length; i++) {
+
+            if (cars[i].material.map.repeat.x === 1) {
+                cars[i].position.x += .75 * canvasAspect * deltaTime;
+                if (cars[i].position.x > 2) {
+                    let shouldRespawn = Math.random() < .001;
+
+                    if (shouldRespawn) {
+                        cars[i].material.color.set(0xFFFFFF * RandomRange(.5,1));
+
+                        let isFacingRight = Math.random() > .75;
+                        if (isFacingRight) {
+                            cars[i].material.map.repeat.x = 1;
+                            cars[i].position.x = -1;
+                        } else {
+                            cars[i].material.map.repeat.x = -1;
+                            cars[i].position.x = 1;
+                        }
+                    }
+                }
+            } else if (cars[i].material.map.repeat.x === -1) {
+                cars[i].position.x -= .75 * canvasAspect * deltaTime;
+                if (cars[i].position.x < -2) {
+                    cars[i].material.color.set(0xFFFFFF * RandomRange(.5,1));
+
+                    let shouldRespawn = Math.random() < .001;
+
+                    if (shouldRespawn) {
+                        let isFacingRight = Math.random() > .25;
+
+                        if (isFacingRight) {
+                            cars[i].material.map.repeat.x = 1;
+                            cars[i].position.x = -1;
+                        } else {
+                            cars[i].material.map.repeat.x = -1;
+                            cars[i].position.x = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        renderer.clear();
+        composer.render(performance.now() * 0.001 + 6000);
+
+        requestAnimationFrame(render);
+    }
+
+    function BoxIsOnScreen(box, camera) {
+
+        let cameraMin = (camera.position.y - 1);
+        let cameraMax = (camera.position.y + 1);
+
+        let mid_rec_min = box.geometry.boundingBox.min.y;
+        let mid_rec_max = box.geometry.boundingBox.max.y;
+
+        return (mid_rec_min >= cameraMin && mid_rec_min <= cameraMax) ||
+            (mid_rec_max >= cameraMin && mid_rec_max <= cameraMax);
+
+
+    }
+
+    function BoxOnScreenLerpPosition(box, camera) {
+
+        let mid_rec_min = box.geometry.boundingBox.min.y;
+        let mid_rec_max = box.geometry.boundingBox.max.y;
+
+        let mid_rec_normal_position = (camera.position.y - (mid_rec_max + 1)) / ((mid_rec_min - 1) - (mid_rec_max + 1));
+
+        return mid_rec_normal_position;
+
+    }
+
+    function OnScroll(event) {
+        let scrollPos = WindowScrollNormalPosition();
+
+        let offsetAmount = -.5 * (canvasWidth / canvasHeight);
+
+        grass0.position.y = lerp(offsetAmount * 1.25, 0, scrollPos);
+        tree1.position.y = lerp(offsetAmount * 1, 0, scrollPos);
+        grass2.position.y = lerp(offsetAmount * .8, 0, scrollPos);
+        excavator3.position.y = lerp(offsetAmount * .7, 0, scrollPos);
+        fence4.position.y = lerp(offsetAmount * .6, 0, scrollPos);
+        car.position.y = lerp(offsetAmount * .6, 0, scrollPos);
+        car1.position.y = lerp(offsetAmount * .6, 0, scrollPos);
+        car2.position.y = lerp(offsetAmount * .6, 0, scrollPos);
+        buildings5.position.y = lerp(offsetAmount * .5, 0, scrollPos);
+        buildings6.position.y = lerp(offsetAmount * .2, 0, scrollPos);
+        buildings7.position.y = lerp(offsetAmount * .1, 0, scrollPos);
+
+        particles.position.y = tree1.position.y - canvasAspect * .4;
+
+        camera.position.y = lerp(cameraScrollStart, cameraScrollEnd, scrollPos);
+
+    }
+
+    document.addEventListener("scroll", OnScroll);
+
+    window.addEventListener("resize", function (event) {
+
+
+        canvasWidth = canvas.clientWidth;
+        canvasHeight = canvas.clientHeight;
+
+        camera.aspect = canvasWidth / canvasHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(canvasWidth, canvasHeight, false);
+
+        panelScaleY = panelScalar * (canvasWidth / canvasHeight);
+
+        //TODO: update scale
+        top_m_tri.border.scale.y = top_m_tri.content.grid.scale.y =
+            top_l_tri.border.scale.y = top_l_tri.content.grid.scale.y =
+                top_r_tri.border.scale.y = top_r_tri.content.grid.scale.y =
+                    bot_m_tri.border.scale.y = bot_m_tri.content.grid.scale.y =
+                        bot_l_tri.border.scale.y = bot_l_tri.content.grid.scale.y =
+                            bot_r_tri.border.scale.y = bot_r_tri.content.grid.scale.y =
+                                top_rec.border.scale.y = top_rec.content.grid.scale.y =
+                                    mid_rec.border.scale.y = mid_rec.content.grid.scale.y =
+                                        bot_rec.border.scale.y = bot_rec.content.grid.scale.y = panelScaleY;
+
+
+        cameraScrollStart = 1.25 * (canvasWidth / canvasHeight) * (3786 / 1980) / 2;
+        cameraScrollEnd = -1.25 * (canvasWidth / canvasHeight) * (3786 / 1980) / 2;
+        OnScroll();
+
+    }, true);
+
+    requestAnimationFrame(render);
+
+
+</script>
+</body>
+</html>

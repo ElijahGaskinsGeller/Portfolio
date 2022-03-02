@@ -1,0 +1,93 @@
+$panel-size: 65%;
+
+.back-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  .back-link {
+    position: -webkit-sticky; /* for Safari */
+    position: sticky;
+    top: 50px;
+    align-self: flex-start; /* <-- this is the fix */
+    a {
+      position: absolute;
+      right: 50px;
+      color: black;
+      opacity: .5;
+      transition: all .5s ease;
+
+      &:hover{
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.sewer-demo-0 {
+
+  background-color: grey;
+  display: flex;
+  perspective: 1px;
+
+  .sewer-outer {
+    position: absolute;
+    display: inline-block;
+    width: $panel-size;
+    //padding-bottom: 50%;
+    left: 0;
+    right: 0;
+    margin: 50vh auto;
+    border-radius: 25%;
+  }
+
+  .sewer-panel-container {
+    background-color: #91a6a1;
+    border-radius: 50%;
+    display: inline-block;
+    width: $panel-size;
+    height: 0;
+    padding-bottom: $panel-size;
+
+    margin: 50vh auto;
+    justify-self: center;
+
+    overflow: hidden;
+    //overflow-x: hidden;
+    //overflow-y: auto;
+    perspective: 1px;
+
+    .test-circle {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50px;
+      background-color: red;
+      transform: translateZ(0px);
+
+      left: 50%;
+      top: 50%;
+      -webkit-transform: translate(-50%, -50%);
+      //transform: translate(-50%, -50%);
+    }
+
+    .test-box-static {
+      position: fixed;
+      width: 100%;
+      height: 10px;
+      bottom: 0;
+      transform: translateZ(-2px) scale(500px);
+      background-color: #1b1e21;
+    }
+
+    img {
+      width: 100%;
+      transform: translate3d(0, 0, 0);
+      //transform: translateZ(-2px) scale(500%);
+      position: absolute;
+      top: -44%;
+    }
+
+  }
+
+}

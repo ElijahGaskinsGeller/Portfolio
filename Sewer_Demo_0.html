@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Elijah | Tech | Sewer</title>
+    <link rel="stylesheet" href="css/compiled-styles.css">
+</head>
+<body class="sewer-demo-0">
+<div class="back-container">
+    <h2 class="back-link"><a href="Tech.html">⇦ Back</a></h2>
+</div>
+
+
+<div class="sewer-panel-container">
+
+    <img class="l5" src="img/comic_demo/Comic_Animated_Concept_pipe_far.png">
+    <img class="l6" src="img/comic_demo/Comic_Animated_Concept_rat.png">
+    <img class="l5" src="img/comic_demo/Comic_Animated_Concept_pipe_far_stream.png">
+    <img class="l4" src="img/comic_demo/Comic_Animated_Concept_stream_far.png">
+    <img class="l3" src="img/comic_demo/Comic_Animated_Concept_stream_close.png">
+    <img class="l2" src="img/comic_demo/Comic_Animated_Concept_0_pipes_close.png">
+    <img class="l1" src="img/comic_demo/v2/Comic_Animated_Concept_0_maya.png">
+
+    <!--        <img src="img/studying_small.png">-->
+    <!--        <div class="test-circle"></div>-->
+    <!---->
+    <!--        <div class="test-box-static"></div>-->
+</div>
+<img class="sewer-outer" src="img/comic_demo/Comic_Animated_Concept_0_outer.png">
+
+</body>
+</html>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<script>
+
+    $(document).ready(
+        function () {
+
+            let page = $(window);
+
+            let l1 = $(".l1");
+            let l2 = $(".l2");
+            let l3 = $(".l3");
+            let l4 = $(".l4");
+            let l5 = $(".l5");
+            let l6 = $(".l6");
+
+            let pageHeight = document.body.scrollHeight - window.innerHeight;
+            let offsetAmount = Math.min(window.outerHeight * .70, 600);
+
+            function UpdateScroll() {
+                let pageHeight = document.body.scrollHeight - window.innerHeight;
+
+                offsetAmount = Math.min(window.outerHeight * .70, 600);
+
+                let scrollPercent = page.scrollTop() / pageHeight;
+                let offsetPercent = offsetAmount * scrollPercent - (offsetAmount * .5);
+
+                l1.css("transform", "translateY(" + (offsetPercent * .05) + "px)");
+                l2.css("transform", "translateY(" + (offsetPercent * .4) + "px)");
+                l3.css("transform", "translateY(" + (offsetPercent * .5) + "px)");
+                l4.css("transform", "translateY(" + (offsetPercent * .7) + "px)");
+                l5.css("transform", "translateY(" + (offsetPercent * .9) + "px)");
+                l6.css("transform", "translateY(" + (offsetPercent * 1) + "px)");
+
+            }
+
+            //init
+            UpdateScroll();
+
+
+            page.scroll(function () {
+
+                UpdateScroll();
+
+            });
+        });
+
+</script>
+
+<!--<script>-->
+
+<!--    console.log($(window));-->
+
+<!--    $(window).scroll(function() {-->
+
+<!--        let page = $(window);-->
+<!--        let panel = $(".sewer-panel-container");-->
+
+<!--        // let pageScrollPercent = $(window).scrollTop() / ($(document).height() - $(window).height());-->
+<!--        let pageScrollPercent = $(window).scrollTop() / page.height();-->
+<!--        // console.log(page);-->
+
+<!--        let panelScrollAmount = panel[0].clientHeight * pageScrollPercent;-->
+
+<!--        $(".debug-info").html("page scroll: "+page.scrollTop()+-->
+<!--                              "<br>page height: "+page.height()+-->
+<!--                              "<br>page scroll percent: "+pageScrollPercent+-->
+<!--                              "<br>panel height:"+panel[0].scrollHeight+-->
+<!--                              "<br>panel scroll amount: "+panelScrollAmount-->
+<!--        );-->
+
+<!--        // console.log(panelScrollAmount);-->
+<!--        // console.log(pageScrollPercent);-->
+<!--        // console.log(panelScrollAmount);-->
+
+<!--        panel.scrollTop(panelScrollAmount);-->
+
+
+<!--    });-->
+
+<!--</script>-->
