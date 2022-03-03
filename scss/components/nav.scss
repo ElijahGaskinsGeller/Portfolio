@@ -107,6 +107,15 @@
           a {
             color: black;
             font-size: 20px;
+            text-decoration: none;
+
+            &:hover{
+              color: #2b2f34;
+            }
+
+            &.underline{
+              border-bottom: black 2px solid;
+            }
           }
         }
       }
@@ -144,6 +153,11 @@
       a {
         color: black;
         font-size: 34px;
+        text-decoration: none;
+
+        &.underline{
+          border-bottom: black 2px solid;
+        }
       }
     }
   }
