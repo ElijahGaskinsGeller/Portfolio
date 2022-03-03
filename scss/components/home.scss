@@ -1,7 +1,141 @@
 
-.home-link-container{
+.home-title {
+  padding-top: 25px;
+  margin: auto;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 
-  max-width: 56%;
-  padding-top: 100px;
+  @media only screen and (max-width: 800px) {
+
+    padding-top: 60px;
+
+    h1{
+      font-size: 1.25rem;
+    }
+
+    h3{
+      font-size: 1rem;
+    }
+  }
+}
+
+.home-container {
+
+  padding-top: 170px;
+
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+
+  @media only screen and (max-width: 800px) {
+    justify-content: space-evenly;
+  }
+
+
+  .home-link {
+    height: 800px;
+    width: 250px;
+    border-radius: 15px;
+    //background-color: red;
+
+    border-style: solid;
+    border-width: 3px;
+    border-color: black;
+    overflow: hidden;
+    background-color: black;
+    margin-bottom: 20px;
+
+
+
+    &:hover {
+      .home-link-overlay {
+        background-color: rgba(0, 0, 0, 0.25);
+      }
+
+      &.home-link-animation {
+        .home-link-image {
+          background-position: -700px;
+        }
+      }
+
+      .home-link-top {
+        padding-top: 250px;
+      }
+
+      .home-link-bottom {
+        padding-top: 460px;
+      }
+
+      .home-link-image {
+        height: 130%;
+        filter: blur(4px);
+        -webkit-filter: blur(4px);
+      }
+    }
+  }
+
+  .home-link-top {
+    padding-top: 200px;
+    transition: all 1s ease;
+  }
+
+  .home-link-bottom {
+    padding-top: 539px;
+    transition: all 1s ease;
+  }
+
+  .home-link-text {
+    position: absolute;
+    color: white;
+    z-index: 2;
+    width: 248px;
+    height: 798px;
+    text-align: center;
+    font-size: 35px;
+    font-weight: bolder;
+  }
+
+  .home-link-overlay {
+    width: 248px;
+    height: 798px;
+    background-color: rgba(0, 0, 0, 0.45);
+    position: absolute;
+    border-radius: 15px;
+    z-index: 1;
+
+    transition: all 1s ease;
+  }
+
+  .home-link-image {
+    height: 120%;
+    filter: blur(2px);
+    -webkit-filter: blur(2px);
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: all 1.5s ease;
+  }
+
+  .home-link-illustration .home-link-image {
+    background-image: url("../img/under_the_bridge_final.png");
+    background-size: cover;
+  }
+
+  .home-link-sketches .home-link-image {
+    background-image: url("../img/sketch_2.png");
+    background-size: cover;
+  }
+
+  .home-link-animation .home-link-image {
+    background-image: url("../img/animation_thumbnail.png");
+    background-size: cover;
+    background-position: -602px;
+    transition: all 1.5s ease;
+  }
+
+  .home-link-tech .home-link-image {
+    background-image: url("../img/tree_demo_thumb.png");
+    background-size: cover;
+  }
 
 }
